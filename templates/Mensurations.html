@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analyse de Mensurations - MESURIA</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Styles spécifiques à la page mensurations */
         :root {
-            --primary-color: #50b3a2;
-            --secondary-color: #23d5ab;
+                --primary-color: #50b3a2;
+                --secondary-color: #23d5ab;
             --accent-color: #8b5cf6;
             --danger-color: #c91945;
             --dark-bg: #0f172a;
@@ -402,7 +402,7 @@
         <!-- En-tête -->
         <center>
             <header class="header">
-                <a href="Accueil.html" style="text-decoration: none;"><h1 class="logo">MESURIA</h1></a>
+                <a href="{{ url_for('logout') }}" style="text-decoration: none;"><h1 class="logo">MESURIA</h1></a>
             </header>
 
  <!-- Guide d'utilisation -->
