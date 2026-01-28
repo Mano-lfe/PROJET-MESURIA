@@ -28,6 +28,8 @@ def home():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
+        nom = request.form.get("nom")
+        prenom = request.form.get("prenom")
         email = request.form.get("email")
         password = request.form.get("password")
         password2 = request.form.get("password2")
@@ -54,8 +56,8 @@ def register():
         password_hash = generate_password_hash(password)
 
         cur.execute(
-            "INSERT INTO users (email, Mot_de_passe, Date_de_creation) VALUES (%s, %s, NOW())",
-            (email, password_hash)
+            "INSERT INTO users (Nom, Prenom, email, Mot_de_passe, Date_de_creation) VALUES (%s, %s, %s, %s, NOW())",
+            (nom, prenom, email, password_hash)
         )
         conn.commit()
         cur.close()
@@ -72,7 +74,7 @@ def register():
 def login():
     if request.method == "POST":
         email = request.form.get("email")
-        password = request.form.get("Mot_de_passe")
+        password = request.form.get("password")
 
         if not email or not password:
             return render_template("seconnecter.html",
@@ -92,7 +94,7 @@ def login():
             return render_template("seconnecter.html",
                                    error="E-mail ou mot de passe incorrect.")
 
-        # connexion OK → on garde l'id en session
+        # connexion OK : on garde l'id en session
         session["user_id"] = user["id_users"]
 
         # redirection vers la page mensurations
