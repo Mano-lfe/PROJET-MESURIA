@@ -131,13 +131,33 @@ def mensurations():
         file = request.files["photo"]
         if file.filename == "":
             return render_template("Mensurations.html",
-                                   error="Aucun fichier sélectionné.")
+                            error="Aucun fichier sélectionné.")
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
             file.save(save_path)
+            
+              # Enregistrer le chemin de l'image dans la bdd
+            image_path = f"static/uploads/{filename}"
+            user_id = session["user_id"]
 
-            # TODO: MediaPipe + BDD plus tard
+            # INSERT dans la table mensurations
+            conn = get_db_connection()
+            cur = conn.cursor()
+
+            cur.execute(
+                """
+                INSERT INTO mensurations (date_analyse, Images, id_users)
+                VALUES (NOW(), %s, %s)
+                """,
+                (image_path, user_id)
+            )
+
+            conn.commit()
+            cur.close()
+            conn.close()
+
+            # TODO: MediaPipe 
 
             return render_template("Mensurations.html",
                                    message="Photo envoyée avec succès.")
