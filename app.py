@@ -6,6 +6,18 @@ app = Flask(__name__)
 app.secret_key = "change_ce_secret"
 
 
+UPLOAD_FOLDER = os.path.join("static", "uploads")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+
+# ---------- Connexion à la BDD ----------
 def get_db_connection():
     conn = mysql.connector.connect(
         host="localhost",  
