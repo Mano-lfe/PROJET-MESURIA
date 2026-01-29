@@ -404,6 +404,14 @@
             <header class="header">
                 <a href="{{ url_for('logout') }}" style="text-decoration: none;"><h1 class="logo">MESURIA</h1></a>
             </header>
+    
+    {% if error %}
+  <p class="error" style="color:#f87171; margin-bottom:15px;">{{ error }}</p>
+{% endif %}
+{% if message %}
+  <p class="success" style="color:#4ade80; margin-bottom:15px;">{{ message }}</p>
+{% endif %}
+
 
  <!-- Guide d'utilisation -->
         <section class="guide-section" id="guide">
@@ -439,47 +447,51 @@
         
         <!-- Section de téléchargement -->
         <section class="upload-section">
-            <h2 style="color: var(--text-light); text-align: center; margin-bottom: 30px; font-size: 2.2rem;">
-                <i class="fas fa-ruler-combined"></i> Analyse de Mensurations
-            </h2>
-            
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                </div>
-                <div class="upload-text">
-                    <h3>Déposez votre photo ici</h3>
-                    <p>Format JPG, PNG ou WEBP • Taille max : 5MB • Vue de face recommandée</p>
-                    <button class="upload-btn" id="browseBtn">
-                        <i class="fas fa-folder-open"></i> Parcourir les fichiers
-                    </button>
-                </div>
-                <input type="file" id="fileInput" accept="image/*">
-            </div>
-            
-            <!-- Prévisualisation -->
-            <div class="preview-container" id="previewContainer">
-                <div class="preview-wrapper">
-                    <div class="image-preview">
-                        <img id="previewImage" src="" alt="Aperçu de l'image">
-                    </div>
+    <h2 style="color: var(--text-light); text-align: center; margin-bottom: 30px; font-size: 2.2rem;">
+        <i class="fas fa-ruler-combined"></i> Analyse de Mensurations
+    </h2>
 
-                    <div class="analysis-controls">
-                        
-                        
-                        <button class="upload-btn" id="analyzeBtn" style="width: 100%; margin-top: 20px;">
-                            <i class="fas fa-magic"></i> Lancer l'analyse 
-                        </button>
-                        
-                        <div style="margin-top: 20px; padding: 15px; background: rgba(80, 179, 162, 0.1); border-radius: 10px;">
-                            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
-                                <i class="fas fa-lightbulb"></i> Notre IA détectera automatiquement 15+ mesures corporelles
-                            </p>
-                        </div>
-                    </div>
+    <!-- FORMULAIRE FLASK -->
+    <form action="{{ url_for('mensurations') }}"
+          method="POST"
+          enctype="multipart/form-data">
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="upload-text">
+                <h3>Déposez votre photo ici</h3>
+                <p>Format JPG, PNG • Taille max : 5MB • Vue de face recommandée</p>
+                <button type="button" class="upload-btn" id="browseBtn">
+                    <i class="fas fa-folder-open"></i> Parcourir les fichiers
+                </button>
+            </div>
+
+            <!-- IMPORTANT : name="photo" -->
+            <input type="file" id="fileInput" name="photo" accept="image/*">
+        </div>
+
+        <!-- Prévisualisation -->
+        <div class="preview-container" id="previewContainer">
+            <div class="preview-wrapper">
+                <div class="image-preview">
+                    <img id="previewImage" src="" alt="Aperçu de l'image">
+                </div>
+
+                <div class="analysis-controls">
+                    <!-- tes textes -->
+                    <button type="submit" class="upload-btn" id="analyzeBtn"
+                            style="width: 100%; margin-top: 20px;">
+                        <i class="fas fa-magic"></i> Lancer l'analyse
+                    </button>
+                    <!-- bloc d'info en dessous inchangé -->
                 </div>
             </div>
-        </section>
+        </div>
+    </form>
+</section>
+
          <footer class="footer">
         <div class="footer-content">
           <div class="footer-logo">MESURIA</div>
@@ -489,10 +501,14 @@
             <p><i class="fas fa-envelope"></i> contact@mesuria.fr</p>
           </div>
           <div class="footer-social">
-            <a href="#"><i class="fab fa-facebook"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a>
-            <a href="#"><i class="fab fa-linkedin"></i></a>
-            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="https://x.com/home?lang=fr"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.linkedin.com/in/junior-feha-320875366/"
+              ><i class="fab fa-linkedin"></i
+            ></a>
+            <a
+              href="https://www.instagram.com/_mano_fh?igsh=OWhtdmFidDBiZTRp&utm_source=qr"
+              ><i class="fab fa-instagram"></i
+            ></a>
           </div>
         </div>
         <div class="footer-bottom">
@@ -500,266 +516,79 @@
         </div>
       </footer>
         
-       
-            
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Références aux éléments DOM
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInput = document.getElementById('fileInput');
-            const browseBtn = document.getElementById('browseBtn');
-            const previewContainer = document.getElementById('previewContainer');
-            const previewImage = document.getElementById('previewImage');
-            const analyzeBtn = document.getElementById('analyzeBtn');
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            const resultsSection = document.getElementById('resultsSection');
-            const resultsGrid = document.getElementById('resultsGrid');
-            const precisionSlider = document.getElementById('precisionSlider');
-            const precisionValue = document.getElementById('precisionValue');
-            const unitSelect = document.getElementById('unitSelect');
-            
-            // Données de démonstration pour les mesures
-            const demoMeasurements = [
-                { name: "Tour de poitrine", value: 95, unit: "cm", change: -1.5 },
-                { name: "Tour de taille", value: 85, unit: "cm", change: -2.3 },
-                { name: "Tour de hanches", value: 98, unit: "cm", change: -1.8 },
-                { name: "Hauteur totale", value: 175, unit: "cm", change: 0 },
-                { name: "Largeur d'épaules", value: 42, unit: "cm", change: 0.5 },
-                { name: "Longueur bras", value: 58, unit: "cm", change: 0 },
-                { name: "Longueur jambe", value: 89, unit: "cm", change: 0 },
-                { name: "Tour de cuisse", value: 56, unit: "cm", change: -1.2 },
-                { name: "Tour de mollet", value: 36, unit: "cm", change: -0.8 },
-                { name: "Tour de bras", value: 32, unit: "cm", change: 0.3 },
-                { name: "Tour de cou", value: 38, unit: "cm", change: -0.5 },
-                { name: "Largeur dos", value: 38, unit: "cm", change: 0 },
-                { name: "Hauteur assise", value: 88, unit: "cm", change: 0 },
-                { name: "Écart épaules", value: 45, unit: "cm", change: 0 },
-                { name: "Tour de tête", value: 57, unit: "cm", change: 0 }
-            ];
-            
-            // Gestion du glisser-déposer
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('drag-over');
-            });
-            
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('drag-over');
-            });
-            
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('drag-over');
-                
-                if (e.dataTransfer.files.length) {
-                    handleFile(e.dataTransfer.files[0]);
-                }
-            });
-            
-            // Gestion du clic sur la zone d'upload
-            uploadArea.addEventListener('click', () => {
-                fileInput.click();
-            });
-            
-            browseBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                fileInput.click();
-            });
-            
-            // Gestion de la sélection de fichier
-            fileInput.addEventListener('change', (e) => {
-                if (e.target.files.length) {
-                    handleFile(e.target.files[0]);
-                }
-            });
-            
-            // Fonction de traitement de fichier
-            function handleFile(file) {
-                // Vérification du type de fichier
-                if (!file.type.match('image.*')) {
-                    alert('Veuillez sélectionner une image (JPG, PNG, WEBP)');
-                    return;
-                }
-                
-                // Vérification de la taille (5MB max)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('L\'image est trop volumineuse. Taille max: 5MB');
-                    return;
-                }
-                
-                // Afficher la prévisualisation
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    previewImage.src = e.target.result;
-                    previewContainer.style.display = 'block';
-                    
-                    // Animation d'apparition
-                    previewContainer.style.opacity = '0';
-                    previewContainer.style.transform = 'translateY(20px)';
-                    
-                    setTimeout(() => {
-                        previewContainer.style.transition = 'all 0.5s ease';
-                        previewContainer.style.opacity = '1';
-                        previewContainer.style.transform = 'translateY(0)';
-                    }, 100);
-                };
-                reader.readAsDataURL(file);
-            }
-            
-            // Gestion du slider de précision
-            precisionSlider.addEventListener('input', () => {
-                precisionValue.textContent = `${precisionSlider.value}/10`;
-            });
-            
-            // Simulation de l'analyse IA
-            analyzeBtn.addEventListener('click', () => {
-                // Afficher l'overlay de chargement
-                loadingOverlay.style.display = 'flex';
-                
-                // Simuler un traitement (3 secondes)
-                setTimeout(() => {
-                    loadingOverlay.style.display = 'none';
-                    showResults();
-                }, 3000);
-            });
-            
-            // Afficher les résultats
-            function showResults() {
-                // Vider la grille actuelle
-                resultsGrid.innerHTML = '';
-                
-                // Générer les cartes de mesures
-                demoMeasurements.forEach((measurement, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'measurement-card';
-                    card.style.animationDelay = `${index * 0.05}s`;
-                    
-                    // Calculer la valeur selon l'unité sélectionnée
-                    let value = measurement.value;
-                    let unit = measurement.unit;
-                    
-                    if (unitSelect.value === 'inches' && unit === 'cm') {
-                        value = (value / 2.54).toFixed(1);
-                        unit = 'in';
-                    }
-                    
-                    card.innerHTML = `
-                        <div class="measurement-name">${measurement.name}</div>
-                        <div class="measurement-value">${value}</div>
-                        <div class="measurement-unit">${unit}</div>
-                        ${measurement.change !== 0 ? `
-                            <div class="measurement-change ${measurement.change > 0 ? 'positive' : 'negative'}">
-                                ${measurement.change > 0 ? '+' : ''}${measurement.change} ${unit === 'in' ? 'in' : 'cm'} depuis la dernière mesure
-                            </div>
-                        ` : ''}
-                    `;
-                    
-                    resultsGrid.appendChild(card);
-                });
-                
-                // Afficher la section des résultats avec animation
-                resultsSection.style.display = 'block';
-                resultsSection.style.opacity = '0';
-                resultsSection.style.transform = 'translateY(30px)';
-                
-                setTimeout(() => {
-                    resultsSection.style.transition = 'all 0.8s ease';
-                    resultsSection.style.opacity = '1';
-                    resultsSection.style.transform = 'translateY(0)';
-                    
-                    // Animer l'apparition des cartes une par une
-                    const cards = resultsGrid.querySelectorAll('.measurement-card');
-                    cards.forEach((card, index) => {
-                        card.style.opacity = '0';
-                        card.style.transform = 'translateY(20px)';
-                        
-                        setTimeout(() => {
-                            card.style.transition = 'all 0.5s ease';
-                            card.style.opacity = '1';
-                            card.style.transform = 'translateY(0)';
-                        }, index * 50);
-                    });
-                }, 100);
-                
-                // Défiler vers les résultats
-                resultsSection.scrollIntoView({ behavior: 'smooth' });
-            }
-            
-            // Gestion du changement d'unité
-            unitSelect.addEventListener('change', () => {
-                if (resultsSection.style.display === 'block') {
-                    showResults();
-                }
-            });
-            
-            // Initialiser les animations
-            animateElements();
-            
-            function animateElements() {
-                const elements = document.querySelectorAll('.upload-section, .guide-section, .history-section');
-                
-                elements.forEach((el, index) => {
-                    el.style.opacity = '0';
-                    el.style.transform = 'translateY(30px)';
-                    
-                    setTimeout(() => {
-                        el.style.transition = 'all 0.8s ease';
-                        el.style.opacity = '1';
-                        el.style.transform = 'translateY(0)';
-                    }, index * 200);
-                });
-            }
-            
-            // Ajouter des particules interactives
-            createInteractiveParticles();
-            
-            function createInteractiveParticles() {
-                const container = document.querySelector('.background-animation');
-                
-                for (let i = 0; i < 15; i++) {
-                    const particle = document.createElement('div');
-                    particle.className = 'interactive-particle';
-                    particle.style.cssText = `
-                        position: absolute;
-                        width: ${Math.random() * 6 + 2}px;
-                        height: ${Math.random() * 6 + 2}px;
-                        background: rgba(80, 179, 162, ${Math.random() * 0.4 + 0.1});
-                        border-radius: 50%;
-                        top: ${Math.random() * 100}%;
-                        left: ${Math.random() * 100}%;
-                        pointer-events: none;
-                        z-index: 1;
-                    `;
-                    container.appendChild(particle);
-                    
-                    // Animation
-                    animateParticle(particle);
-                }
-            }
-            
-            function animateParticle(particle) {
-                let x = Math.random() * 100;
-                let y = Math.random() * 100;
-                let xSpeed = (Math.random() - 0.5) * 0.3;
-                let ySpeed = (Math.random() - 0.5) * 0.3;
-                
-                const move = () => {
-                    x += xSpeed;
-                    y += ySpeed;
-                    
-                    if (x <= 0 || x >= 100) xSpeed *= -1;
-                    if (y <= 0 || y >= 100) ySpeed *= -1;
-                    
-                    particle.style.left = `${x}%`;
-                    particle.style.top = `${y}%`;
-                    
-                    requestAnimationFrame(move);
-                };
-                
-                move();
-            }
-        });
-    </script>
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+
+    if (!uploadArea || !fileInput) {
+        return; // sécurité si on inclut ce script ailleurs
+    }
+
+    // Drag & drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+
+        if (e.dataTransfer.files.length) {
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+            // pour que Flask reçoive le fichier au submit
+            fileInput.files = e.dataTransfer.files;
+        }
+    });
+
+    // Clic sur la zone / bouton
+    uploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    browseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.click();
+    });
+
+    // Sélection via la boîte de fichier
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length) {
+            handleFile(e.target.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        // vérif image
+        if (!file.type.match('image.*')) {
+            alert('Veuillez sélectionner une image (JPG, PNG)');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert('L\'image est trop volumineuse (max 5MB)');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+
 </body>
 </html>

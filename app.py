@@ -2,6 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
 
+import os
+from werkzeug.utils import secure_filename
+
 app = Flask(__name__)
 app.secret_key = "change_ce_secret"
 
@@ -31,7 +34,7 @@ def get_db_connection():
 # ---------- Routes ----------
 
 # Accueil
-@app.route("/Accueil")
+@app.route("/")
 def home():
     return render_template("Accueil.html")
 
@@ -115,13 +118,33 @@ def login():
     return render_template("seconnecter.html")
 
 
-# Page mensurations (ici juste protégée, sans upload pour l'instant)
-@app.route("/mensurations")
+# Page mensurations avec upload de photo
+@app.route("/mensurations", methods=["GET", "POST"])
 def mensurations():
     if "user_id" not in session:
         return redirect(url_for("login"))
-    return render_template("Mensurations.html")
 
+    if request.method == "POST":
+        if "photo" not in request.files:
+            return render_template("Mensurations.html",
+                                   error="Aucun fichier reçu.")
+        file = request.files["photo"]
+        if file.filename == "":
+            return render_template("Mensurations.html",
+                                   error="Aucun fichier sélectionné.")
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+            file.save(save_path)
+
+            # TODO: MediaPipe + BDD plus tard
+
+            return render_template("Mensurations.html",
+                                   message="Photo envoyée avec succès.")
+        return render_template("Mensurations.html",
+                               error="Type de fichier non autorisé.")
+
+    return render_template("Mensurations.html")
 
 # Déconnexion
 @app.route("/logout")

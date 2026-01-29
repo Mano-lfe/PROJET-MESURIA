@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MESURIA - Connexion</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -33,11 +36,12 @@
       <div class="shape shape-3"></div>
       <div class="shape shape-4"></div>
     </div>
+    
     <div class="container auth-container">
       <div class="auth-card">
         <h1>Se connecter</h1>
 
-        <form action="{{ url_for('login') }}" method="POST"> 
+        <form action="{{ url_for('login') }}" method="POST">
           <label for="email">Adresse e-mail</label>
           <input type="email" id="email" name="email" required />
 
