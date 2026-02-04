@@ -110,18 +110,24 @@
         .preview-wrapper {
             display: flex;
             gap: 30px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: center;
+            align-items: stretch;
         }
 
         .image-preview {
             flex: 1;
             min-width: 300px;
             max-width: 500px;
+            display: flex;
+            align-items: flex-start;
         }
 
         .image-preview img {
             width: 100%;
+            height: auto;
+            max-height: 600px;
+            object-fit: contain;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             border: 3px solid var(--primary-color);
@@ -130,35 +136,47 @@
         .analysis-controls {
             flex: 1;
             min-width: 300px;
+            max-width: 500px;
             background: rgba(30, 41, 59, 0.9);
             padding: 25px;
             border-radius: 15px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
 
         .measurement-results {
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 40px;
-            margin-top: 30px;
+            padding: 25px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             display: none;
             animation: fadeIn 0.8s ease-out;
+            flex-grow: 1;
+            min-height: 400px;
+        }
+
+        .results-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .results-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         .results-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+            flex-grow: 1;
         }
 
         .measurement-card {
@@ -166,12 +184,40 @@
             border-radius: 12px;
             padding: 20px;
             border-left: 4px solid var(--primary-color);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, background 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            min-height: 100px;
         }
 
         .measurement-card:hover {
             transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(80, 179, 162, 0.15);
+            border-left-color: var(--secondary-color);
+        }
+
+        .measurement-name {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .measurement-value {
+            color: var(--text-light);
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .measurement-unit {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-left: 5px;
         }
 
         .guide-section {
@@ -207,6 +253,51 @@
             font-size: 2.5rem;
             color: var(--primary-color);
             margin-bottom: 15px;
+        }
+
+        .footer {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 50px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .footer-info p {
+            color: var(--text-muted);
+            margin: 5px 0;
+        }
+
+        .footer-social a {
+            color: var(--text-light);
+            font-size: 1.5rem;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-social a:hover {
+            color: var(--primary-color);
+        }
+
+        .footer-bottom {
+            color: var(--text-muted);
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         @keyframes float {
@@ -246,10 +337,39 @@
 
             .image-preview, .analysis-controls {
                 min-width: 100%;
+                max-width: 100%;
+            }
+
+            .image-preview img {
+                max-height: 400px;
+            }
+
+            .measurement-results {
+                min-height: auto;
             }
 
             .results-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .footer-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .results-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .measurement-card {
+                min-height: 80px;
+                padding: 15px;
+            }
+
+            .upload-area {
+                padding: 40px 20px;
             }
         }
     </style>
@@ -262,21 +382,12 @@
         <div class="shape shape-3"></div>
         <div class="shape shape-4"></div>
     </div>
-
-    <div class="loading-overlay" id="loadingOverlay">
-        <div>
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Analyse en cours...</div>
-        </div>
-    </div>
-
     <div class="mensurations-container">
         <center>
             <header class="header">
                 <a href="{{ url_for('logout') }}" style="text-decoration: none;"><h1 class="logo">MESURIA</h1></a>
             </header>
-
-        {% if error %}
+         {% if error %}
           <p class="error" style="color:#f87171; margin-bottom:15px;">{{ error }}</p>
         {% endif %}
         {% if message %}
@@ -337,42 +448,94 @@
                 </div>
 
                 <!-- Prévisualisation -->
-                <div class="preview-container" id="previewContainer" style="{% if image_url %}display:block;{% else %}display:none;{% endif %}">
+                <div class="preview-container" id="previewContainer"
+                     style="{% if image_url %}display:block;{% else %}display:none;{% endif %}">
                   <div class="preview-wrapper">
+                    <!-- Image à gauche -->
                     <div class="image-preview">
-                      <img id="previewImage" src="{% if image_url %}{{ image_url }}{% endif %}" alt="Aperçu de l'image">
+                      <img id="previewImage"
+                           src="{% if image_url %}{{ image_url }}{% endif %}"
+                           alt="Aperçu de l'image">
                     </div>
 
+                    <!-- Conteneur pour le bouton et les résultats alignés -->
                     <div class="analysis-controls">
                       <button type="submit" class="upload-btn" id="analyzeBtn"
-                              style="width: 100%; margin-top: 20px;">
+                              style="width: 100%; margin-top: 20px; margin-bottom: 30px;">
                         <i class="fas fa-magic"></i> Lancer l'analyse
                       </button>
 
-                      <!-- Bloc des mesures après analyse -->
-                      <div class="analysis-panel" style="margin-top:20px;">
-                        {% if epaule or poitrine or torse or bras or tour_taille or jambe %}
-                          <div class="measure-card">
-                            <ul class="measure-list">
-                              <li><span>Épaule</span> : {{ epaule|round(1) }} px</li>
-                              <li><span>Poitrine</span> : {{ poitrine|round(1) }} px</li>
-                              <li><span>Torse</span> : {{ torse|round(1) }} px</li>
-                              <li><span>Bras</span> : {{ bras|round(1) }} px</li>
-                              <li><span>Tour de taille</span> : {{ tour_taille|round(1) }} px</li>
-                              <li><span>Longueur de jambe</span> : {{ jambe|round(1) }} px</li>
-                            </ul>
+                      <!-- Résultats des mensurations sous forme de cartes alignées -->
+                      <div class="measurement-results" id="resultsSection"
+                           style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:flex;{% else %}display:none;{% endif %}">
+                        
+                        <div class="results-container">
+                          <div class="results-header">
+                            <h3 style="color: var(--text-light); margin-bottom: 25px; font-size: 1.5rem;">
+                              <i class="fas fa-chart-line"></i> Résultats de l'analyse
+                            </h3>
                           </div>
-                        {% else %}
-                          <p style="color:#9ca3af; text-align:center; margin-top:15px;">
-                            Aucune mesure pour l’instant. Envoyez une photo puis lancez l’analyse.
-                          </p>
-                        {% endif %}
+
+                          <div class="results-grid">
+                            {% if epaule %}
+                            <div class="measurement-card">
+                              <div class="measurement-name">Épaule</div>
+                              <div class="measurement-value">{{ epaule|round(1) }} <span class="measurement-unit">px</span></div>
+                            </div>
+                            {% endif %}
+
+                            {% if poitrine %}
+                            <div class="measurement-card">
+                              <div class="measurement-name">Poitrine</div>
+                              <div class="measurement-value">{{ poitrine|round(1) }} <span class="measurement-unit">px</span></div>
+                            </div>
+                            {% endif %}
+
+                            {% if torse %}
+                            <div class="measurement-card">
+                              <div class="measurement-name">Torse</div>
+                              <div class="measurement-value">{{ torse|round(1) }} <span class="measurement-unit">px</span></div>
+                            </div>
+                            {% endif %}
+
+                            {% if bras %}
+                            <div class="measurement-card">
+                              <div class="measurement-name">Bras</div>
+                              <div class="measurement-value">{{ bras|round(1) }} <span class="measurement-unit">px</span></div>
+                            </div>
+                            {% endif %}
+
+                            {% if tour_taille %}
+                            <div class="measurement-card">
+                              <div class="measurement-name">Tour de taille</div>
+                              <div class="measurement-value">{{ tour_taille|round(1) }} <span class="measurement-unit">px</span></div>
+                            </div>
+                            {% endif %}
+
+                            {% if jambe %}
+                            <div class="measurement-card">
+                              <div class="measurement-name">Longueur de jambe</div>
+                              <div class="measurement-value">{{ jambe|round(1) }} <span class="measurement-unit">px</span></div>
+                            </div>
+                            {% endif %}
+                          </div>
+                        </div>
                       </div>
+
+                      {% if not (epaule or poitrine or torse or bras or tour_taille or jambe) %}
+                      <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; min-height: 400px;">
+                        <p style="color:#9ca3af; text-align:center; padding: 20px;">
+                          <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 10px; display: block; color: var(--primary-color);"></i>
+                          Aucune mesure pour l'instant.<br>
+                          Envoyez une photo puis lancez l'analyse.
+                        </p>
+                      </div>
+                      {% endif %}
                     </div>
                   </div>
                 </div>       
             </form>
-    </section>
+        </section>
 
         <footer class="footer">
             <div class="footer-content">
@@ -455,6 +618,9 @@
       reader.onload = (e) => {
           previewImage.src = e.target.result;
           previewContainer.style.display = 'block';
+          
+          // Scroll vers la prévisualisation
+          previewContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       };
       reader.readAsDataURL(file);
   }
