@@ -173,6 +173,8 @@ def mensurations():
         filename = secure_filename(file.filename)
         save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(save_path)
+        image_url = url_for("static", filename=f"uploads/{filename}")
+
 
         # -------- chargement modèle MediaPipe --------
         MODEL_PATH = "pose_landmarker_full.task"
@@ -280,10 +282,11 @@ def mensurations():
             bras=bras_px,
             tour_taille=taille_px,
             jambe=jambe_px,
+            image_url=image_url,
         )
 
     # GET simple
-    return render_template("Mensurations.html")
+    return render_template("Mensurations.html", image_url=None)
 
 
 # Déconnexion

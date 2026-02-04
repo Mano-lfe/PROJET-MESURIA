@@ -337,10 +337,10 @@
                 </div>
 
                 <!-- Prévisualisation -->
-                <div class="preview-container" id="previewContainer" style="display:none;">
+                <div class="preview-container" id="previewContainer" style="{% if image_url %}display:block;{% else %}display:none;{% endif %}">
                   <div class="preview-wrapper">
                     <div class="image-preview">
-                      <img id="previewImage" src="" alt="Aperçu de l'image">
+                      <img id="previewImage" src="{% if image_url %}{{ image_url }}{% endif %}" alt="Aperçu de l'image">
                     </div>
 
                     <div class="analysis-controls">
