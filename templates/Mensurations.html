@@ -131,31 +131,33 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             border: 3px solid var(--primary-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            
+        }
+        .image-preview img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
         }
 
-        .analysis-controls {
-            flex: 1;
-            min-width: 300px;
-            max-width: 500px;
-            background: rgba(30, 41, 59, 0.9);
-            padding: 25px;
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }
 
         .measurement-results {
             background: var(--card-bg);
+          
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 3px solid var(--primary-color);
             display: none;
+            flex-direction: column;
             animation: fadeIn 0.8s ease-out;
             flex-grow: 1;
-            min-height: 400px;
+            min-height: 450px;   
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .measurement-results:hover {
+            transform: scale(1.02);
+            background: rgba(30, 41, 59, 0.8);
         }
 
         .results-container {
@@ -171,47 +173,43 @@
             margin-bottom: 15px;
         }
 
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
-            flex-grow: 1;
-        }
+.results-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+}
 
-        .measurement-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 20px;
-            border-left: 4px solid var(--primary-color);
-            transition: transform 0.3s ease, background 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            min-height: 100px;
-        }
+.measurement-card {
+    width: 130px;          /* largeur du carré */
+    height: 130px;         /* hauteur du carré */
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 10px;
+    border-left: 4px solid var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;   /* centre le contenu */
+    text-align: center;
+    transition: transform 0.3s ease, background 0.3s ease;
+}
 
-        .measurement-card:hover {
-            transform: translateY(-5px);
-            background: rgba(80, 179, 162, 0.15);
-            border-left-color: var(--secondary-color);
-        }
+.measurement-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.08);
+}
 
-        .measurement-name {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
+.measurement-name {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+}
 
-        .measurement-value {
-            color: var(--text-light);
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
+.measurement-value {
+    font-size: 1.2rem;
+    margin-bottom: 2px;
+}
+
 
         .measurement-unit {
             color: var(--secondary-color);
@@ -443,9 +441,12 @@
                             <i class="fas fa-folder-open"></i> Upload ma photo
                         </button>
                     </div>
-
                     <input type="file" id="fileInput" name="photo" accept="image/*">
                 </div>
+                            <button type="submit" class="upload-btn"
+        style="margin-top:15px; font-weight:600px; font-size:1.1rem;">
+  Lancer l'analyse
+</button>
 
                 <!-- Prévisualisation -->
                 <div class="preview-container" id="previewContainer"
@@ -459,78 +460,76 @@
                     </div>
 
                     <!-- Conteneur pour le bouton et les résultats alignés -->
-                    <div class="analysis-controls">
-                      <button type="submit" class="upload-btn" id="analyzeBtn"
-                              style="width: 100%; margin-top: 20px; margin-bottom: 30px;">
-                        <i class="fas fa-magic"></i> Lancer l'analyse
-                      </button>
+<div class="analysis-controls">
+  <!-- On enlève le bouton -->
 
-                      <!-- Résultats des mensurations sous forme de cartes alignées -->
-                      <div class="measurement-results" id="resultsSection"
-                           style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:flex;{% else %}display:none;{% endif %}">
-                        
-                        <div class="results-container">
-                          <div class="results-header">
-                            <h3 style="color: var(--text-light); margin-bottom: 25px; font-size: 1.5rem;">
-                              <i class="fas fa-chart-line"></i> Résultats de l'analyse
-                            </h3>
-                          </div>
+  <div class="measurement-results" id="resultsSection"
+       style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:block;{% else %}display:none;{% endif %}">
+    <div> 
+      <h3 style="color: var(--text-light);">
+        <center><i class="fas fa-chart-line"></i> Résultats de l'analyse</center>   
+      </h3>
+    </div>
+    <br>
 
-                          <div class="results-grid">
-                            {% if epaule %}
-                            <div class="measurement-card">
-                              <div class="measurement-name">Épaule</div>
-                              <div class="measurement-value">{{ epaule|round(1) }} <span class="measurement-unit">px</span></div>
-                            </div>
-                            {% endif %}
+    <div class="results-grid">
+      {% if epaule %}
+      <div class="measurement-card">
+        <div class="measurement-name">Épaule</div>
+        <div class="measurement-value">{{ epaule|round(1) }}</div>
+        <div class="measurement-unit">px</div>
+      </div>
+      {% endif %}
 
-                            {% if poitrine %}
-                            <div class="measurement-card">
-                              <div class="measurement-name">Poitrine</div>
-                              <div class="measurement-value">{{ poitrine|round(1) }} <span class="measurement-unit">px</span></div>
-                            </div>
-                            {% endif %}
+      {% if poitrine %}
+      <div class="measurement-card">
+        <div class="measurement-name">Poitrine</div>
+        <div class="measurement-value">{{ poitrine|round(1) }}</div>
+        <div class="measurement-unit">px</div>
+      </div>
+      {% endif %}
 
-                            {% if torse %}
-                            <div class="measurement-card">
-                              <div class="measurement-name">Torse</div>
-                              <div class="measurement-value">{{ torse|round(1) }} <span class="measurement-unit">px</span></div>
-                            </div>
-                            {% endif %}
+      {% if torse %}
+      <div class="measurement-card">
+        <div class="measurement-name">Torse</div>
+        <div class="measurement-value">{{ torse|round(1) }}</div>
+        <div class="measurement-unit">px</div>
+      </div>
+      {% endif %}
 
-                            {% if bras %}
-                            <div class="measurement-card">
-                              <div class="measurement-name">Bras</div>
-                              <div class="measurement-value">{{ bras|round(1) }} <span class="measurement-unit">px</span></div>
-                            </div>
-                            {% endif %}
+      {% if bras %}
+      <div class="measurement-card">
+        <div class="measurement-name">Bras</div>
+        <div class="measurement-value">{{ bras|round(1) }}</div>
+        <div class="measurement-unit">px</div>
+      </div>
+      {% endif %}
 
-                            {% if tour_taille %}
-                            <div class="measurement-card">
-                              <div class="measurement-name">Tour de taille</div>
-                              <div class="measurement-value">{{ tour_taille|round(1) }} <span class="measurement-unit">px</span></div>
-                            </div>
-                            {% endif %}
+      {% if tour_taille %}
+      <div class="measurement-card">
+        <div class="measurement-name">Tour de taille</div>
+        <div class="measurement-value">{{ tour_taille|round(1) }}</div>
+        <div class="measurement-unit">px</div>
+      </div>
+      {% endif %}
 
-                            {% if jambe %}
-                            <div class="measurement-card">
-                              <div class="measurement-name">Longueur de jambe</div>
-                              <div class="measurement-value">{{ jambe|round(1) }} <span class="measurement-unit">px</span></div>
-                            </div>
-                            {% endif %}
-                          </div>
-                        </div>
-                      </div>
+      {% if jambe %}
+      <div class="measurement-card">
+        <div class="measurement-name">Longueur de jambe</div>
+        <div class="measurement-value">{{ jambe|round(1) }}</div>
+        <div class="measurement-unit">px</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 
-                      {% if not (epaule or poitrine or torse or bras or tour_taille or jambe) %}
-                      <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; min-height: 400px;">
-                        <p style="color:#9ca3af; text-align:center; padding: 20px;">
-                          <i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 10px; display: block; color: var(--primary-color);"></i>
-                          Aucune mesure pour l'instant.<br>
-                          Envoyez une photo puis lancez l'analyse.
-                        </p>
-                      </div>
-                      {% endif %}
+  {% if not (epaule or poitrine or torse or bras or tour_taille or jambe) %}
+  <p style="color:#9ca3af; text-align:center; margin-top:15px;">
+    Envoyez une photo pour afficher les mensurations.
+  </p>
+  {% endif %}
+</div>
+
                     </div>
                   </div>
                 </div>       
