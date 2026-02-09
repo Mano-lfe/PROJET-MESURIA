@@ -53,8 +53,9 @@ def register():
         email = request.form.get("email")
         password = request.form.get("password")
         password2 = request.form.get("password2")
+        taille_cm = request.form.get("taille_cm")
 
-        if not email or not password or not password2:
+        if not email or not password or not password2 or not taille_cm:
             return render_template(
                 "compte.html",
                 error="Merci de remplir tous les champs.",
@@ -83,10 +84,10 @@ def register():
 
         cur.execute(
             """
-            INSERT INTO users (Nom, Prenom, email, Mot_de_passe, Date_de_creation)
-            VALUES (%s, %s, %s, %s, NOW())
+            INSERT INTO users (Nom, Prenom, Taille_cm, email, Mot_de_passe, Date_de_creation)
+            VALUES (%s, %s, %s, %s, %s, NOW())
             """,
-            (nom, prenom, email, password_hash),
+            (nom, prenom, taille_cm, email, password_hash),
         )
         conn.commit()
         cur.close()
