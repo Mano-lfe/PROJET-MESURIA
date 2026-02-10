@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
             --primary-color: #50b3a2;
@@ -132,17 +133,15 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             border: 3px solid var(--primary-color);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            
         }
+
         .image-preview img:hover {
             transform: scale(1.02);
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
         }
 
-
         .measurement-results {
             background: var(--card-bg);
-          
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 25px;
@@ -151,7 +150,7 @@
             flex-direction: column;
             animation: fadeIn 0.8s ease-out;
             flex-grow: 1;
-            min-height: 450px;   
+            min-height: 450px;
             transition: transform 0.3s ease, background 0.3s ease;
         }
 
@@ -160,56 +159,42 @@
             background: rgba(30, 41, 59, 0.8);
         }
 
-        .results-container {
-            height: 100%;
+        .results-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .measurement-card {
+            width: 130px;
+            height: 130px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 10px;
+            border-left: 4px solid var(--primary-color);
             display: flex;
             flex-direction: column;
-        }
-
-        .results-header {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            justify-content: center;
+            text-align: center;
+            transition: transform 0.3s ease, background 0.3s ease;
         }
 
-.results-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-    justify-content: center;
-}
+        .measurement-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+        }
 
-.measurement-card {
-    width: 130px;          /* largeur du carré */
-    height: 130px;         /* hauteur du carré */
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 10px;
-    border-left: 4px solid var(--primary-color);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;   /* centre le contenu */
-    text-align: center;
-    transition: transform 0.3s ease, background 0.3s ease;
-}
+        .measurement-name {
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
 
-.measurement-card:hover {
-    transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.measurement-name {
-    font-size: 0.8rem;
-    margin-bottom: 4px;
-}
-
-.measurement-value {
-    font-size: 1.2rem;
-    margin-bottom: 2px;
-}
-
+        .measurement-value {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
 
         .measurement-unit {
             color: var(--secondary-color);
@@ -319,11 +304,6 @@
             }
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         @media (max-width: 768px) {
             .upload-section, .measurement-results, .guide-section {
                 padding: 25px 20px;
@@ -333,7 +313,7 @@
                 flex-direction: column;
             }
 
-            .image-preview, .analysis-controls {
+            .image-preview {
                 min-width: 100%;
                 max-width: 100%;
             }
@@ -345,22 +325,9 @@
             .measurement-results {
                 min-height: auto;
             }
-
-            .results-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .footer-content {
-                flex-direction: column;
-                gap: 20px;
-            }
         }
 
         @media (max-width: 480px) {
-            .results-grid {
-                grid-template-columns: 1fr;
-            }
-
             .measurement-card {
                 min-height: 80px;
                 padding: 15px;
@@ -370,19 +337,19 @@
                 padding: 40px 20px;
             }
         }
+
         .right-panel {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;   /* centre verticalement */
-    align-items: center;       /* centre horizontalement */
-}
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
 
-#emptyMessage {
-    text-align: center;
-    font-size: 2rem;
-    max-width: 500px;          /* optionnel pour un bloc plus étroit */
-}
-
+        #emptyMessage {
+            text-align: center;
+            font-size: 2rem;
+            max-width: 500px;
+        }
     </style>
 </head>
 
@@ -393,17 +360,23 @@
         <div class="shape shape-3"></div>
         <div class="shape shape-4"></div>
     </div>
+
     <div class="mensurations-container">
         <center>
             <header class="header">
-                <a href="{{ url_for('logout') }}" style="text-decoration: none;"><h1 class="logo">MESURIA</h1></a>
+                <a href="{{ url_for('logout') }}" style="text-decoration: none;">
+                    <h1 class="logo">MESURIA</h1>
+                </a>
             </header>
-         {% if error %}
-          <p class="error" style="color:#f87171; margin-bottom:15px;">{{ error }}</p>
-        {% endif %}
-        {% if message %}
-          <p class="success" style="color:#4ade80; margin-bottom:15px;">{{ message }}</p>
-        {% endif %}
+
+            {% if error %}
+            <p class="error" style="color:#f87171; margin-bottom:15px;">{{ error }}</p>
+            {% endif %}
+
+            {% if message %}
+            <p class="success" style="color:#4ade80; margin-bottom:15px;">{{ message }}</p>
+            {% endif %}
+        </center>
 
         <section class="guide-section" id="guide">
             <h2 style="color: var(--text-light); text-align: center; margin-bottom: 30px;">
@@ -449,226 +422,208 @@
                     </div>
                     <div class="upload-text">
                         <h3>Déposez votre photo ici</h3>
-                        <p>Format JPG, PNG </p>
+                        <p>Format JPG, PNG</p>
                         <button type="button" class="upload-btn" id="browseBtn">
                             <i class="fas fa-folder-open"></i> Upload ma photo
                         </button>
                     </div>
                     <input type="file" id="fileInput" name="photo" accept="image/*">
                 </div>
-                            <button type="submit" class="upload-btn" id="analyzeBtn"
-        style="margin-top:15px; font-weight:600px; font-size:1.1rem; display:none;"><i class="fas fa-magic"></i> Lancer l'analyse</button>
 
-                <!-- Prévisualisation -->
+                <center>
+                    <button type="submit" class="upload-btn" id="analyzeBtn"
+                    style="margin-top:15px; font-weight:600; font-size:1.1rem; display:none;"><i class="fas fa-magic"></i> Lancer l'analyse</button>
+                </center>
+
                 <div class="preview-container" id="previewContainer"
                      style="{% if image_url %}display:block;{% else %}display:none;{% endif %}">
-                  <div class="preview-wrapper">
-                    <!-- Image à gauche -->
-                    <div class="image-preview">
-                      <img id="previewImage"
-                           src="{% if image_url %}{{ image_url }}{% endif %}"
-                           alt="Aperçu de l'image">
+                    <div class="preview-wrapper">
+                        <div class="image-preview">
+                            <img id="previewImage"
+                                 src="{% if image_url %}{{ image_url }}{% endif %}"
+                                 alt="Aperçu de l'image">
+                        </div>
+
+                        <div class="right-panel">
+                            <p id="emptyMessage"
+                               style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:none;{% else %}display:block;{% endif %}">
+                                Lancez l’analyse pour afficher vos mensurations.
+                            </p>
+                        </div>
+
+                        <div class="measurement-results" id="resultsSection"
+                             style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:flex;{% else %}display:none;{% endif %}">
+                            <div>
+                                <h3 style="color: var(--text-light);">
+                                    <center><i class="fas fa-chart-line"></i> Résultats de l'analyse</center>
+                                </h3>
+                            </div>
+                            <br>
+
+                            <div class="results-grid">
+                                {% if epaule is not none %}
+                                <div class="measurement-card">
+                                    <div class="measurement-name">Épaule</div>
+                                    <div class="measurement-value">{{ epaule|round(1) }}</div>
+                                    <div class="measurement-unit">cm</div>
+                                </div>
+                                {% endif %}
+
+                                {% if poitrine is not none %}
+                                <div class="measurement-card">
+                                    <div class="measurement-name">Poitrine</div>
+                                    <div class="measurement-value">{{ poitrine|round(1) }}</div>
+                                    <div class="measurement-unit">cm</div>
+                                </div>
+                                {% endif %}
+
+                                {% if torse is not none %}
+                                <div class="measurement-card">
+                                    <div class="measurement-name">Torse</div>
+                                    <div class="measurement-value">{{ torse|round(1) }}</div>
+                                    <div class="measurement-unit">cm</div>
+                                </div>
+                                {% endif %}
+
+                                {% if bras is not none %}
+                                <div class="measurement-card">
+                                    <div class="measurement-name">Bras</div>
+                                    <div class="measurement-value">{{ bras|round(1) }}</div>
+                                    <div class="measurement-unit">cm</div>
+                                </div>
+                                {% endif %}
+
+                                {% if tour_taille is not none %}
+                                <div class="measurement-card">
+                                    <div class="measurement-name">Tour de taille</div>
+                                    <div class="measurement-value">{{ tour_taille|round(1) }}</div>
+                                    <div class="measurement-unit">cm</div>
+                                </div>
+                                {% endif %}
+
+                                {% if jambe is not none %}
+                                <div class="measurement-card">
+                                    <div class="measurement-name">Longueur de jambe</div>
+                                    <div class="measurement-value">{{ jambe|round(1) }}</div>
+                                    <div class="measurement-unit">cm</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-
-                    <!-- Conteneur pour le bouton et les résultats alignés -->
-
-  <!-- On enlève le bouton -->
-<div class="right-panel">
-  <p id="emptyMessage"
-     style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:none;{% else %}display:block;{% endif %}">
-    Lancez l’analyse pour afficher vos mensurations.
-  </p>
-</div>
-
-
-
-  <div class="measurement-results" id="resultsSection"
-       style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:flex;{% else %}display:none;{% endif %}">
-    <div> 
-      <h3 style="color: var(--text-light);">
-        <center><i class="fas fa-chart-line"></i> Résultats de l'analyse</center>   
-      </h3>
-    </div>
-    <br>
-
-    <div class="results-grid">
-      {% if epaule %}
-      <div class="measurement-card">
-        <div class="measurement-name">Épaule</div>
-        <div class="measurement-value">{{ epaule|round(1) }}</div>
-        <div class="measurement-unit">cm</div>
-      </div>
-      {% endif %}
-
-      {% if poitrine %}
-      <div class="measurement-card">
-        <div class="measurement-name">Poitrine</div>
-        <div class="measurement-value">{{ poitrine|round(1) }}</div>
-        <div class="measurement-unit">cm</div>
-      </div>
-      {% endif %}
-
-      {% if torse %}
-      <div class="measurement-card">
-        <div class="measurement-name">Torse</div>
-        <div class="measurement-value">{{ torse|round(1) }}</div>
-        <div class="measurement-unit">cm</div>
-      </div>
-      {% endif %}
-
-      {% if bras %}
-      <div class="measurement-card">
-        <div class="measurement-name">Bras</div>
-        <div class="measurement-value">{{ bras|round(1) }}</div>
-        <div class="measurement-unit">cm</div>
-      </div>
-      {% endif %}
-
-      {% if tour_taille %}
-      <div class="measurement-card">
-        <div class="measurement-name">Tour de taille</div>
-        <div class="measurement-value">{{ tour_taille|round(1) }}</div>
-        <div class="measurement-unit">cm</div>
-      </div>
-      {% endif %}
-
-      {% if jambe %}
-      <div class="measurement-card">
-        <div class="measurement-name">Longueur de jambe</div>
-        <div class="measurement-value">{{ jambe|round(1) }}</div>
-        <div class="measurement-unit">cm</div>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-
-</div>
-
-                    </div>
-                  </div>
-                </div>       
+                </div>
             </form>
         </section>
 
         <footer class="footer">
             <div class="footer-content">
-              <div class="footer-logo">MESURIA</div>
-              <div class="footer-info">
-                <p><i class="fas fa-map-marker-alt"></i> Paris, France</p>
-                <p><i class="fas fa-phone"></i> +33 1 23 45 67 89</p>
-                <p><i class="fas fa-envelope"></i> contact@mesuria.fr</p>
-              </div>
-              <div class="footer-social">
-                <a href="https://x.com/home?lang=fr"><i class="fab fa-twitter"></i></a>
-                <a href="https://www.linkedin.com/in/junior-feha-320875366/"><i class="fab fa-linkedin"></i></a>
-                <a href="https://www.instagram.com/_mano_fh?igsh=OWhtdmFidDBiZTRp&utm_source=qr"><i class="fab fa-instagram"></i></a>
-              </div>
+                <div class="footer-logo">MESURIA</div>
+                <div class="footer-info">
+                    <p><i class="fas fa-map-marker-alt"></i> Paris, France</p>
+                    <p><i class="fas fa-phone"></i> +33 1 23 45 67 89</p>
+                    <p><i class="fas fa-envelope"></i> contact@mesuria.fr</p>
+                </div>
+                <div class="footer-social">
+                    <a href="https://x.com/home?lang=fr"><i class="fab fa-twitter"></i></a>
+                    <a href="https://www.linkedin.com/in/junior-feha-320875366/"><i class="fab fa-linkedin"></i></a>
+                    <a href="https://www.instagram.com/_mano_fh?igsh=OWhtdmFidDBiZTRp&utm_source=qr"><i class="fab fa-instagram"></i></a>
+                </div>
             </div>
             <div class="footer-bottom">
-              <p>&copy; 2026 MESURIA</p>
+                <p>&copy; 2026 MESURIA</p>
             </div>
         </footer>
     </div>
 
     <script>
-   document.addEventListener('DOMContentLoaded', function() {
-    const analyzeBtn = document.getElementById('analyzeBtn');
-const resultsSection = document.getElementById('resultsSection');
-  const uploadArea = document.getElementById('uploadArea');
-  const fileInput = document.getElementById('fileInput');
-  const browseBtn = document.getElementById('browseBtn');
-  const previewContainer = document.getElementById('previewContainer');
-  const previewImage = document.getElementById('previewImage');
-
-  if (!uploadArea || !fileInput || !previewContainer || !previewImage) {
-      return;
-  }
-
-  uploadArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadArea.classList.add('drag-over');
-  });
-
-  uploadArea.addEventListener('dragleave', () => {
-      uploadArea.classList.remove('drag-over');
-  });
-
-  uploadArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove('drag-over');
-
-      if (e.dataTransfer.files.length) {
-          const file = e.dataTransfer.files[0];
-          handleFile(file);
-          fileInput.files = e.dataTransfer.files;
-      }
-  });
-
-  uploadArea.addEventListener('click', () => {
-      fileInput.click();
-  });
-
-  browseBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      fileInput.click();
-  });
-
-  fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length) {
-         // Reset des mesures affichées
+    document.addEventListener('DOMContentLoaded', function() {
+        const analyzeBtn = document.getElementById('analyzeBtn');
         const resultsSection = document.getElementById('resultsSection');
-        if (resultsSection) {
-            resultsSection.style.display = 'none';
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const browseBtn = document.getElementById('browseBtn');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+
+        if (!uploadArea || !fileInput || !previewContainer || !previewImage) {
+            return;
         }
-        // Message au centre à droite
-        const emptyMsg = document.getElementById('emptyMessage');
-        if (emptyMsg) {
-            emptyMsg.style.display = 'block';
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+
+            if (e.dataTransfer.files.length) {
+                const file = e.dataTransfer.files[0];
+                handleFile(file);
+                fileInput.files = e.dataTransfer.files;
+            }
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        browseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                const resultsSection = document.getElementById('resultsSection');
+                if (resultsSection) {
+                    resultsSection.style.display = 'none';
+                }
+                const emptyMsg = document.getElementById('emptyMessage');
+                if (emptyMsg) {
+                    emptyMsg.style.display = 'block';
+                }
+
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.match('image.*')) {
+                alert('Veuillez sélectionner une image (JPG, PNG)');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert("L'image est trop volumineuse (max 5MB)");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (resultsSection) {
+                    resultsSection.style.display = 'none';
+                }
+                const emptyMsg = document.getElementById('emptyMessage');
+                if (emptyMsg) {
+                    emptyMsg.style.display = 'block';
+                }
+
+                previewImage.src = e.target.result;
+                previewContainer.style.display = 'block';
+                previewContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                if (analyzeBtn) {
+                    analyzeBtn.style.display = 'inline-flex';
+                }
+            };
+            reader.readAsDataURL(file);
         }
-
-        handleFile(e.target.files[0]);
-    }
-
-  });
-
-  function handleFile(file) {
-      if (!file.type.match('image.*')) {
-          alert('Veuillez sélectionner une image (JPG, PNG)');
-          return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-          alert("L'image est trop volumineuse (max 5MB)");
-          return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-
-        // Réinitialiser les anciens résultats
-if (resultsSection) {
-    resultsSection.style.display = 'none';
-}
-const emptyMsg = document.getElementById('emptyMessage');
-if (emptyMsg) {
-    emptyMsg.style.display = 'block';
-}
-          previewImage.src = e.target.result;
-          previewContainer.style.display = 'block';
-          
-          // Scroll vers la prévisualisation
-          previewContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-
-          // Afficher le bouton d'analyse
-          if (analyzeBtn) {
-    analyzeBtn.style.display = 'inline-flex';   // le bouton apparaît
-}
-
-      };
-      reader.readAsDataURL(file);
-  }
-});
-
+    });
     </script>
 </body>
 </html>
