@@ -147,28 +147,38 @@ def login():
 def mensurations():
     if "user_id" not in session:
         return redirect(url_for("login"))
+    
+    user_id = session["user_id"]
+
+    # Récupérer la taille en cm depuis la BDD
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT Taille_cm FROM users WHERE id_users = %s", (user_id,))
+    user = cur.fetchone()
+    cur.close()
+    conn.close()
+
+    taille_reelle_cm = user["Taille_cm"] if user and user["Taille_cm"] else None
+
+    # valeurs par défaut pour GET ou si analyse impossible
+    epaule_cm = poitrine_cm = torse_cm = bras_cm = tour_taille_cm = jambe_cm = None
+    image_url = None
 
     if request.method == "POST":
         # -------- vérification du fichier --------
         if "photo" not in request.files:
-            return render_template(
-                "Mensurations.html",
-                error="Aucun fichier reçu.",
-            )
+            return render_template("Mensurations.html",
+                                   error="Aucun fichier reçu.")
 
         file = request.files["photo"]
 
         if file.filename == "":
-            return render_template(
-                "Mensurations.html",
-                error="Aucun fichier sélectionné.",
-            )
+            return render_template("Mensurations.html",
+                                   error="Aucun fichier sélectionné.")
 
         if not allowed_file(file.filename):
-            return render_template(
-                "Mensurations.html",
-                error="Type de fichier non autorisé.",
-            )
+            return render_template("Mensurations.html",
+                                   error="Type de fichier non autorisé.")
 
         # -------- sauvegarde --------
         filename = secure_filename(file.filename)
@@ -176,12 +186,10 @@ def mensurations():
         file.save(save_path)
         image_url = url_for("static", filename=f"uploads/{filename}")
 
-
         # -------- chargement modèle MediaPipe --------
         MODEL_PATH = "pose_landmarker_full.task"
         if not os.path.exists(MODEL_PATH):
             import urllib.request
-
             url = (
                 "https://storage.googleapis.com/mediapipe-models/"
                 "pose_landmarker/pose_landmarker_full/float16/1/"
@@ -225,6 +233,7 @@ def mensurations():
             RIGHT_HIP = 24
             LEFT_KNEE = 25
             LEFT_ANKLE = 27
+            NOSE = 0 
 
             # Épaules
             sx, sy = lm_px(LEFT_SHOULDER)
@@ -258,8 +267,25 @@ def mensurations():
             bas_jambe = sqrt((ax - kx) ** 2 + (ay - ky) ** 2)
             jambe_px = haut_jambe + bas_jambe
 
+            # Taille en pixels : distance nez -> cheville gauche
+            nx, ny = lm_px(NOSE)
+            ax, ay = lm_px(LEFT_ANKLE)
+            taille_px = sqrt((ax - nx) ** 2 + (ay - ny) ** 2)
+
+            # ----- Conversion pixels -> cm -----
+            cm_par_px = None
+            if taille_reelle_cm and taille_px and taille_px > 0:
+                cm_par_px = float(taille_reelle_cm) / taille_px
+
+            if cm_par_px:
+                epaule_cm = epaule_px * cm_par_px if epaule_px else None
+                poitrine_cm = poitrine_px * cm_par_px if poitrine_px else None
+                torse_cm = torse_px * cm_par_px if torse_px else None
+                bras_cm = bras_px * cm_par_px if bras_px else None
+                tour_taille_cm = taille_px * cm_par_px if taille_px else None
+                jambe_cm = jambe_px * cm_par_px if jambe_px else None
+
         # -------- enregistrement BDD (optionnel) --------
-        user_id = session["user_id"]
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
@@ -273,20 +299,23 @@ def mensurations():
         cur.close()
         conn.close()
 
-        # -------- retour page HTML avec résultats --------
-        return render_template(
-            "Mensurations.html",
-            message="Analyse terminée.",
-            epaule=epaule_px,
-            poitrine=poitrine_px,
-            torse=torse_px,
-            bras=bras_px,
-            tour_taille=taille_px,
-            jambe=jambe_px,
-            image_url=image_url,
-        )
+        # après un POST réussi, on tombe sur le render_template plus bas
 
-    # GET simple
+    # -------- retour page HTML avec résultats (GET ou POST) --------
+    return render_template(
+        "Mensurations.html",
+        message="Analyse terminée." if request.method == "POST" else None,
+        epaule=epaule_cm,
+        poitrine=poitrine_cm,
+        torse=torse_cm,
+        bras=bras_cm,
+        tour_taille=tour_taille_cm,
+        jambe=jambe_cm,
+        image_url=image_url,
+    )
+
+
+# GET simple
     return render_template("Mensurations.html", image_url=None)
 
 

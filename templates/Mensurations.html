@@ -370,6 +370,19 @@
                 padding: 40px 20px;
             }
         }
+        .right-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;   /* centre verticalement */
+    align-items: center;       /* centre horizontalement */
+}
+
+#emptyMessage {
+    text-align: center;
+    font-size: 2rem;
+    max-width: 500px;          /* optionnel pour un bloc plus étroit */
+}
+
     </style>
 </head>
 
@@ -443,10 +456,8 @@
                     </div>
                     <input type="file" id="fileInput" name="photo" accept="image/*">
                 </div>
-                            <button type="submit" class="upload-btn"
-        style="margin-top:15px; font-weight:600px; font-size:1.1rem;">
-  Lancer l'analyse
-</button>
+                            <button type="submit" class="upload-btn" id="analyzeBtn"
+        style="margin-top:15px; font-weight:600px; font-size:1.1rem; display:none;"><i class="fas fa-magic"></i> Lancer l'analyse</button>
 
                 <!-- Prévisualisation -->
                 <div class="preview-container" id="previewContainer"
@@ -460,11 +471,19 @@
                     </div>
 
                     <!-- Conteneur pour le bouton et les résultats alignés -->
-<div class="analysis-controls">
+
   <!-- On enlève le bouton -->
+<div class="right-panel">
+  <p id="emptyMessage"
+     style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:none;{% else %}display:block;{% endif %}">
+    Lancez l’analyse pour afficher vos mensurations.
+  </p>
+</div>
+
+
 
   <div class="measurement-results" id="resultsSection"
-       style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:block;{% else %}display:none;{% endif %}">
+       style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:flex;{% else %}display:none;{% endif %}">
     <div> 
       <h3 style="color: var(--text-light);">
         <center><i class="fas fa-chart-line"></i> Résultats de l'analyse</center>   
@@ -477,7 +496,7 @@
       <div class="measurement-card">
         <div class="measurement-name">Épaule</div>
         <div class="measurement-value">{{ epaule|round(1) }}</div>
-        <div class="measurement-unit">px</div>
+        <div class="measurement-unit">cm</div>
       </div>
       {% endif %}
 
@@ -485,7 +504,7 @@
       <div class="measurement-card">
         <div class="measurement-name">Poitrine</div>
         <div class="measurement-value">{{ poitrine|round(1) }}</div>
-        <div class="measurement-unit">px</div>
+        <div class="measurement-unit">cm</div>
       </div>
       {% endif %}
 
@@ -493,7 +512,7 @@
       <div class="measurement-card">
         <div class="measurement-name">Torse</div>
         <div class="measurement-value">{{ torse|round(1) }}</div>
-        <div class="measurement-unit">px</div>
+        <div class="measurement-unit">cm</div>
       </div>
       {% endif %}
 
@@ -501,7 +520,7 @@
       <div class="measurement-card">
         <div class="measurement-name">Bras</div>
         <div class="measurement-value">{{ bras|round(1) }}</div>
-        <div class="measurement-unit">px</div>
+        <div class="measurement-unit">cm</div>
       </div>
       {% endif %}
 
@@ -509,7 +528,7 @@
       <div class="measurement-card">
         <div class="measurement-name">Tour de taille</div>
         <div class="measurement-value">{{ tour_taille|round(1) }}</div>
-        <div class="measurement-unit">px</div>
+        <div class="measurement-unit">cm</div>
       </div>
       {% endif %}
 
@@ -517,17 +536,12 @@
       <div class="measurement-card">
         <div class="measurement-name">Longueur de jambe</div>
         <div class="measurement-value">{{ jambe|round(1) }}</div>
-        <div class="measurement-unit">px</div>
+        <div class="measurement-unit">cm</div>
       </div>
       {% endif %}
     </div>
   </div>
 
-  {% if not (epaule or poitrine or torse or bras or tour_taille or jambe) %}
-  <p style="color:#9ca3af; text-align:center; margin-top:15px;">
-    Envoyez une photo pour afficher les mensurations.
-  </p>
-  {% endif %}
 </div>
 
                     </div>
@@ -558,6 +572,8 @@
 
     <script>
    document.addEventListener('DOMContentLoaded', function() {
+    const analyzeBtn = document.getElementById('analyzeBtn');
+const resultsSection = document.getElementById('resultsSection');
   const uploadArea = document.getElementById('uploadArea');
   const fileInput = document.getElementById('fileInput');
   const browseBtn = document.getElementById('browseBtn');
@@ -599,8 +615,20 @@
 
   fileInput.addEventListener('change', (e) => {
       if (e.target.files.length) {
-          handleFile(e.target.files[0]);
-      }
+         // Reset des mesures affichées
+        const resultsSection = document.getElementById('resultsSection');
+        if (resultsSection) {
+            resultsSection.style.display = 'none';
+        }
+        // Message au centre à droite
+        const emptyMsg = document.getElementById('emptyMessage');
+        if (emptyMsg) {
+            emptyMsg.style.display = 'block';
+        }
+
+        handleFile(e.target.files[0]);
+    }
+
   });
 
   function handleFile(file) {
@@ -615,11 +643,27 @@
 
       const reader = new FileReader();
       reader.onload = (e) => {
+
+        // Réinitialiser les anciens résultats
+if (resultsSection) {
+    resultsSection.style.display = 'none';
+}
+const emptyMsg = document.getElementById('emptyMessage');
+if (emptyMsg) {
+    emptyMsg.style.display = 'block';
+}
           previewImage.src = e.target.result;
           previewContainer.style.display = 'block';
           
           // Scroll vers la prévisualisation
           previewContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+
+          // Afficher le bouton d'analyse
+          if (analyzeBtn) {
+    analyzeBtn.style.display = 'inline-flex';   // le bouton apparaît
+}
+
       };
       reader.readAsDataURL(file);
   }
