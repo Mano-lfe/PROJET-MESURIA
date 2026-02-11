@@ -138,6 +138,7 @@ def mensurations():
 
     user_id = session["user_id"]
 
+    # Récupération taille réelle
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
     cur.execute("SELECT Taille_cm FROM users WHERE id_users = %s", (user_id,))
@@ -147,12 +148,14 @@ def mensurations():
 
     taille_reelle_cm = user["Taille_cm"] if user and user["Taille_cm"] else None
 
+    # valeurs par défaut
     epaule_cm = poitrine_cm = torse_cm = bras_cm = tour_taille_cm = jambe_cm = None
     image_url = None
     message = None
     error = None
 
     if request.method == "POST":
+        # ---------- vérif fichier ----------
         if "photo" not in request.files:
             error = "Aucun fichier reçu."
             return render_template(
@@ -197,11 +200,13 @@ def mensurations():
                 image_url=image_url,
             )
 
+        # ---------- sauvegarde fichier ----------
         filename = secure_filename(file.filename)
         save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(save_path)
         image_url = url_for("static", filename=f"uploads/{filename}")
 
+        # ---------- MediaPipe ----------
         MODEL_PATH = "pose_landmarker_full.task"
         if not os.path.exists(MODEL_PATH):
             import urllib.request
@@ -258,7 +263,7 @@ def mensurations():
 
             torse_px = sqrt(
                 ((hx_left + hx_right) / 2 - (sx + dx) / 2) ** 2
-                + ((hy_left + hy_right) / 2 - (sy + dy) ** 2)
+                + ((hy_left + hy_right) / 2 - (sy + dy) / 2) ** 2
             )
 
             wx, wy = lm_px(LEFT_WRIST)
@@ -286,18 +291,49 @@ def mensurations():
                 tour_taille_cm = taille_px * cm_par_px if taille_px else None
                 jambe_cm = jambe_px * cm_par_px if jambe_px else None
 
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute(
-            """
-            INSERT INTO mensurations (date_analyse, id_users)
-            VALUES (NOW(), %s)
-            """,
-            (user_id,),
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
+        # ---------- DEBUG + INSERT ----------
+        print("DEBUG mensurations:")
+        print("user_id:", user_id)
+        print("epaule_cm:", epaule_cm)
+        print("poitrine_cm:", poitrine_cm)
+        print("torse_cm:", torse_cm)
+        print("bras_cm:", bras_cm)
+        print("tour_taille_cm:", tour_taille_cm)
+        print("jambe_cm:", jambe_cm)
+        print("filename:", filename)
+
+        try:
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute(
+                """
+                INSERT INTO mensurations (
+                    date_analyse,
+                    Epaule, Poitrine, Torse, Bras,
+                    Tour_de_taille, Longueur_de_jambe,
+                    Images,
+                    id_users
+                )
+                VALUES (NOW(), %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    epaule_cm,
+                    poitrine_cm,
+                    torse_cm,
+                    bras_cm,
+                    tour_taille_cm,
+                    jambe_cm,
+                    filename,
+                    user_id,
+                ),
+            )
+            conn.commit()
+            print("DEBUG insert OK, rowcount:", cur.rowcount)
+        except Exception as e:
+            print("DEBUG insert ERROR:", repr(e))
+        finally:
+            cur.close()
+            conn.close()
 
         message = "Analyse terminée."
 
