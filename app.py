@@ -351,6 +351,96 @@ def mensurations():
     )
 
 
+from fpdf import FPDF
+from flask import make_response
+from datetime import datetime
+
+@app.route("/export_pdf")
+def export_pdf():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+
+    # Récupérer les infos utilisateur
+    conn = get_db_connection()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT Nom, Prenom FROM users WHERE id_users = %s", (user_id,))
+    user = cur.fetchone()
+
+    # Récupérer les dernières mensurations
+    cur.execute(
+        """
+        SELECT date_analyse, Epaule, Poitrine, Torse, Bras,
+               Tour_de_taille, Longueur_de_jambe
+        FROM mensurations
+        WHERE id_users = %s
+        ORDER BY date_analyse DESC
+        LIMIT 1
+        """,
+        (user_id,)
+    )
+    mensurations = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # ----- CONSTRUCTION DU PDF -----
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+
+    # Titre
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "MESURIA - Rapport de Mensurations", ln=True, align="C")
+    pdf.ln(5)
+
+    # Infos utilisateur
+    pdf.set_font("Arial", "", 12)
+    nom_complet = f"{user['Prenom']} {user['Nom']}" if user else "Utilisateur inconnu"
+    pdf.cell(0, 8, f"Utilisateur : {nom_complet}", ln=True)
+    pdf.cell(0, 8, f"Date : {datetime.now().strftime('%d/%m/%Y')}", ln=True)
+    pdf.ln(8)
+
+    # En-têtes du tableau
+    pdf.set_font("Arial", "B", 9)
+    pdf.cell(35, 8, "Date", border=1, align="C")
+    pdf.cell(22, 8, "Epaule", border=1, align="C")
+    pdf.cell(22, 8, "Poitrine", border=1, align="C")
+    pdf.cell(22, 8, "Torse", border=1, align="C")
+    pdf.cell(22, 8, "Bras", border=1, align="C")
+    pdf.cell(22, 8, "Taille", border=1, align="C")
+    pdf.cell(25, 8, "Jambe", border=1, align="C")
+    pdf.ln()
+
+    # Lignes du tableau
+    pdf.set_font("Arial", "", 9)
+    for m in mensurations:
+        date_str = m["date_analyse"].strftime("%d/%m/%Y") if m["date_analyse"] else "-"
+        pdf.cell(35, 8, date_str, border=1, align="C")
+        pdf.cell(22, 8, f"{m['Epaule']:.1f}" if m["Epaule"] is not None else "-", border=1, align="C")
+        pdf.cell(22, 8, f"{m['Poitrine']:.1f}" if m["Poitrine"] is not None else "-", border=1, align="C")
+        pdf.cell(22, 8, f"{m['Torse']:.1f}" if m["Torse"] is not None else "-", border=1, align="C")
+        pdf.cell(22, 8, f"{m['Bras']:.1f}" if m["Bras"] is not None else "-", border=1, align="C")
+        pdf.cell(22, 8, f"{m['Tour_de_taille']:.1f}" if m["Tour_de_taille"] is not None else "-", border=1, align="C")
+        pdf.cell(25, 8, f"{m['Longueur_de_jambe']:.1f}" if m["Longueur_de_jambe"] is not None else "-", border=1, align="C")
+        pdf.ln()
+
+    # ----- GÉNÉRATION FINALE -----
+    # (aucun pdf.cell() après cette ligne !)
+    pdf_raw = pdf.output(dest="S")  # str ou bytearray selon la version de fpdf2
+    if isinstance(pdf_raw, str):
+        pdf_bytes = pdf_raw.encode("latin-1")
+    else:
+        pdf_bytes = bytes(pdf_raw)
+
+    response = make_response(pdf_bytes)
+    response.headers["Content-Type"] = "application/pdf"
+    response.headers["Content-Disposition"] = "attachment; filename=mensurations.pdf"
+    return response
+
+
+
+
 @app.route("/logout")
 def logout():
     session.clear()
