@@ -379,6 +379,64 @@
         text-align: center;
         font-size: 2rem;
         max-width: 500px;
+        color: var(--text-light);
+      }
+
+      .text-light {
+        color: var(--text-light);
+      }
+
+      .text-muted {
+        color: var(--text-muted);
+      }
+
+      .logo {
+        color: var(--primary-color);
+        font-weight: 700;
+      }
+
+      .error {
+        color: var(--danger-color);
+        margin-bottom: 15px;
+      }
+
+      .success {
+        color: #4ade80;
+        margin-bottom: 15px;
+      }
+
+      .section-title {
+        color: var(--text-light);
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2.2rem;
+      }
+
+      .guide-title {
+        color: var(--text-light);
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .guide-card h3 {
+        color: var(--text-light);
+        margin-bottom: 10px;
+      }
+
+      .guide-card p {
+        color: var(--text-muted);
+      }
+
+      .results-title {
+        color: var(--text-light);
+      }
+
+      .link-no-decoration {
+        text-decoration: none;
+      }
+
+      .upload-btn-link {
+        text-decoration: none;
       }
     </style>
   </head>
@@ -394,30 +452,20 @@
     <div class="mensurations-container">
       <center>
         <header class="header">
-          <a href="{{ url_for('logout') }}" style="text-decoration: none">
+          <a href="{{ url_for('logout') }}" class="link-no-decoration">
             <h1 class="logo">MESURIA</h1>
           </a>
         </header>
 
         {% if error %}
-        <p class="error" style="color: #f87171; margin-bottom: 15px">
-          {{ error }}
-        </p>
+        <p class="error">{{ error }}</p>
         {% endif %} {% if message %}
-        <p class="success" style="color: #4ade80; margin-bottom: 15px">
-          {{ message }}
-        </p>
+        <p class="success">{{ message }}</p>
         {% endif %}
       </center>
 
       <section class="guide-section" id="guide">
-        <h2
-          style="
-            color: var(--text-light);
-            text-align: center;
-            margin-bottom: 30px;
-          "
-        >
+        <h2 class="guide-title">
           <i class="fas fa-graduation-cap"></i> Guide d'analyse :
         </h2>
 
@@ -426,49 +474,30 @@
             <div class="guide-icon">
               <i class="fas fa-camera"></i>
             </div>
-            <h3 style="color: var(--text-light); margin-bottom: 10px">
-              Position
-            </h3>
-            <p style="color: var(--text-muted)">
-              Debout, bras légèrement écartés, face à la caméra.
-            </p>
+            <h3>Position</h3>
+            <p>Debout, bras légèrement écartés, face à la caméra.</p>
           </div>
 
           <div class="guide-card">
             <div class="guide-icon">
               <i class="fas fa-tshirt"></i>
             </div>
-            <h3 style="color: var(--text-light); margin-bottom: 10px">
-              Vêtements
-            </h3>
-            <p style="color: var(--text-muted)">
-              Portez des vêtements près du corps pour plus de précision.
-            </p>
+            <h3>Vêtements</h3>
+            <p>Portez des vêtements près du corps pour plus de précision.</p>
           </div>
 
           <div class="guide-card">
             <div class="guide-icon">
               <i class="fas fa-lightbulb"></i>
             </div>
-            <h3 style="color: var(--text-light); margin-bottom: 10px">
-              Éclairage
-            </h3>
-            <p style="color: var(--text-muted)">
-              Lumière uniforme, évitez les ombres marquées.
-            </p>
+            <h3>Éclairage</h3>
+            <p>Lumière uniforme, évitez les ombres marquées.</p>
           </div>
         </div>
       </section>
 
       <section class="upload-section">
-        <h2
-          style="
-            color: var(--text-light);
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2.2rem;
-          "
-        >
+        <h2 class="section-title">
           <i class="fas fa-ruler-combined"></i> Analyse de Mensurations
         </h2>
 
@@ -536,7 +565,7 @@
                 style="{% if epaule or poitrine or torse or bras or tour_taille or jambe %}display:flex;{% else %}display:none;{% endif %}"
               >
                 <div>
-                  <h3 style="color: var(--text-light)">
+                  <h3 class="results-title">
                     <center>
                       <i class="fas fa-chart-line"></i> Résultats de l'analyse
                     </center>
@@ -588,8 +617,7 @@
                 <div style="text-align: center; margin-top: 30px">
                   <a
                     href="{{ url_for('export_pdf') }}"
-                    class="upload-btn"
-                    style="text-decoration: none"
+                    class="upload-btn upload-btn-link"
                   >
                     <i class="fas fa-file-pdf"></i> Exporter en PDF
                   </a>
@@ -688,9 +716,14 @@
         // CLIC SUR "LANCER L'ANALYSE" : on envoie le formulaire
         if (analyzeBtn && form) {
           analyzeBtn.addEventListener("click", (e) => {
-            e.stopPropagation(); // pour ne pas déclencher l'uploadArea
-            // pas de preventDefault -> on laisse le submit normal
-            form.submit();
+            // Vérifie qu'un fichier est choisi
+            if (!fileInput.files || fileInput.files.length === 0) {
+              e.preventDefault();
+              alert("Choisis d’abord une photo.");
+              return;
+            }
+            // Sinon on ne fait rien : le bouton type="submit"
+            // enverra tout seul le formulaire en POST vers /mensurations
           });
         }
 

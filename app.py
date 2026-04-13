@@ -1,4 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    make_response,
+)
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -8,6 +16,8 @@ import cv2
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
+from fpdf import FPDF
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "change_ce_secret"
@@ -153,6 +163,7 @@ def mensurations():
     image_url = None
     message = None
     error = None
+    warning = None
 
     if request.method == "POST":
         # ---------- vérif fichier ----------
@@ -210,6 +221,7 @@ def mensurations():
         MODEL_PATH = "pose_landmarker_full.task"
         if not os.path.exists(MODEL_PATH):
             import urllib.request
+
             url = (
                 "https://storage.googleapis.com/mediapipe-models/"
                 "pose_landmarker/pose_landmarker_full/float16/1/"
@@ -253,32 +265,39 @@ def mensurations():
             LEFT_ANKLE = 27
             NOSE = 0
 
+            # épaules
             sx, sy = lm_px(LEFT_SHOULDER)
             dx, dy = lm_px(RIGHT_SHOULDER)
             epaule_px = sqrt((dx - sx) ** 2 + (dy - sy) ** 2)
             poitrine_px = abs(dx - sx)
 
+            # hanches
             hx_left, hy_left = lm_px(LEFT_HIP)
             hx_right, hy_right = lm_px(RIGHT_HIP)
 
+            # torse
             torse_px = sqrt(
                 ((hx_left + hx_right) / 2 - (sx + dx) / 2) ** 2
                 + ((hy_left + hy_right) / 2 - (sy + dy) / 2) ** 2
             )
 
+            # bras
             wx, wy = lm_px(LEFT_WRIST)
             bras_px = sqrt((wx - sx) ** 2 + (wy - sy) ** 2)
 
+            # jambe
             kx, ky = lm_px(LEFT_KNEE)
             ax, ay = lm_px(LEFT_ANKLE)
             haut_jambe = sqrt((kx - hx_left) ** 2 + (ky - hy_left) ** 2)
             bas_jambe = sqrt((ax - kx) ** 2 + (ay - ky) ** 2)
             jambe_px = haut_jambe + bas_jambe
 
+            # taille (nez -> cheville)
             nx, ny = lm_px(NOSE)
             ax, ay = lm_px(LEFT_ANKLE)
             taille_px = sqrt((ax - nx) ** 2 + (ay - ny) ** 2)
 
+            # conversion px -> cm
             cm_par_px = None
             if taille_reelle_cm and taille_px and taille_px > 0:
                 cm_par_px = float(taille_reelle_cm) / taille_px
@@ -290,6 +309,31 @@ def mensurations():
                 bras_cm = bras_px * cm_par_px if bras_px else None
                 tour_taille_cm = taille_px * cm_par_px if taille_px else None
                 jambe_cm = jambe_px * cm_par_px if jambe_px else None
+
+                # --------- RÈGLES DE VALIDATION ---------
+
+                # 1) Jambe : la cheville doit être proche du bas de l'image
+                if ay < h * 0.8:
+                    jambe_cm = None
+                    warning = "Certaines mensurations ne sont pas fiables sur cette photo (jambes peu visibles)."
+
+                # 2) Torse : ratio réaliste par rapport à la taille
+                ratio_torse = (
+                    torse_cm / float(taille_reelle_cm)
+                    if torse_cm and taille_reelle_cm
+                    else None
+                )
+                if ratio_torse and (ratio_torse < 0.2 or ratio_torse > 0.6):
+                    torse_cm = None
+
+                # 3) Bras : ratio réaliste
+                ratio_bras = (
+                    bras_cm / float(taille_reelle_cm)
+                    if bras_cm and taille_reelle_cm
+                    else None
+                )
+                if ratio_bras and (ratio_bras < 0.2 or ratio_bras > 0.6):
+                    bras_cm = None
 
         # ---------- DEBUG + INSERT ----------
         print("DEBUG mensurations:")
@@ -341,6 +385,7 @@ def mensurations():
         "Mensurations.html",
         message=message,
         error=error,
+        warning=warning,
         epaule=epaule_cm,
         poitrine=poitrine_cm,
         torse=torse_cm,
@@ -350,10 +395,6 @@ def mensurations():
         image_url=image_url,
     )
 
-
-from fpdf import FPDF
-from flask import make_response
-from datetime import datetime
 
 @app.route("/export_pdf")
 def export_pdf():
@@ -368,7 +409,7 @@ def export_pdf():
     cur.execute("SELECT Nom, Prenom FROM users WHERE id_users = %s", (user_id,))
     user = cur.fetchone()
 
-    # Récupérer les dernières mensurations
+    # Récupérer la DERNIERE mensuration
     cur.execute(
         """
         SELECT date_analyse, Epaule, Poitrine, Torse, Bras,
@@ -378,9 +419,9 @@ def export_pdf():
         ORDER BY date_analyse DESC
         LIMIT 1
         """,
-        (user_id,)
+        (user_id,),
     )
-    mensurations = cur.fetchall()
+    last_m = cur.fetchone()
     cur.close()
     conn.close()
 
@@ -412,22 +453,71 @@ def export_pdf():
     pdf.cell(25, 8, "Jambe", border=1, align="C")
     pdf.ln()
 
-    # Lignes du tableau
+    # Ligne unique
     pdf.set_font("Arial", "", 9)
-    for m in mensurations:
-        date_str = m["date_analyse"].strftime("%d/%m/%Y") if m["date_analyse"] else "-"
+    if last_m:
+        date_str = (
+            last_m["date_analyse"].strftime("%d/%m/%Y")
+            if last_m["date_analyse"]
+            else "-"
+        )
         pdf.cell(35, 8, date_str, border=1, align="C")
-        pdf.cell(22, 8, f"{m['Epaule']:.1f}" if m["Epaule"] is not None else "-", border=1, align="C")
-        pdf.cell(22, 8, f"{m['Poitrine']:.1f}" if m["Poitrine"] is not None else "-", border=1, align="C")
-        pdf.cell(22, 8, f"{m['Torse']:.1f}" if m["Torse"] is not None else "-", border=1, align="C")
-        pdf.cell(22, 8, f"{m['Bras']:.1f}" if m["Bras"] is not None else "-", border=1, align="C")
-        pdf.cell(22, 8, f"{m['Tour_de_taille']:.1f}" if m["Tour_de_taille"] is not None else "-", border=1, align="C")
-        pdf.cell(25, 8, f"{m['Longueur_de_jambe']:.1f}" if m["Longueur_de_jambe"] is not None else "-", border=1, align="C")
+        pdf.cell(
+            22,
+            8,
+            f"{last_m['Epaule']:.1f}" if last_m["Epaule"] is not None else "-",
+            border=1,
+            align="C",
+        )
+        pdf.cell(
+            22,
+            8,
+            f"{last_m['Poitrine']:.1f}" if last_m["Poitrine"] is not None else "-",
+            border=1,
+            align="C",
+        )
+        pdf.cell(
+            22,
+            8,
+            f"{last_m['Torse']:.1f}" if last_m["Torse"] is not None else "-",
+            border=1,
+            align="C",
+        )
+        pdf.cell(
+            22,
+            8,
+            f"{last_m['Bras']:.1f}" if last_m["Bras"] is not None else "-",
+            border=1,
+            align="C",
+        )
+        pdf.cell(
+            22,
+            8,
+            (
+                f"{last_m['Tour_de_taille']:.1f}"
+                if last_m["Tour_de_taille"] is not None
+                else "-"
+            ),
+            border=1,
+            align="C",
+        )
+        pdf.cell(
+            25,
+            8,
+            (
+                f"{last_m['Longueur_de_jambe']:.1f}"
+                if last_m["Longueur_de_jambe"] is not None
+                else "-"
+            ),
+            border=1,
+            align="C",
+        )
         pdf.ln()
+    else:
+        pdf.cell(0, 8, "Aucune mensuration trouvée.", ln=True)
 
     # ----- GÉNÉRATION FINALE -----
-    # (aucun pdf.cell() après cette ligne !)
-    pdf_raw = pdf.output(dest="S")  # str ou bytearray selon la version de fpdf2
+    pdf_raw = pdf.output(dest="S")
     if isinstance(pdf_raw, str):
         pdf_bytes = pdf_raw.encode("latin-1")
     else:
@@ -437,8 +527,6 @@ def export_pdf():
     response.headers["Content-Type"] = "application/pdf"
     response.headers["Content-Disposition"] = "attachment; filename=mensurations.pdf"
     return response
-
-
 
 
 @app.route("/logout")
